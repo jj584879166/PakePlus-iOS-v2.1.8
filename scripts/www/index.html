@@ -1,88 +1,1035 @@
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <link rel="stylesheet" href="./static/css/styles.css" />
-        <meta
-            http-equiv="Content-Security-Policy"
-            content="default-src * 'unsafe-inline' 'unsafe-eval'"
-        />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Tauri App</title>
-        <script src="./static/js/main.js"></script>
-    </head>
-    <body>
-        <main class="container">
-            <h1>Welcome to TauriMan</h1>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <title>成员照片积分管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            padding: 15px;
+            background: #f8f9fa;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        /* 可编辑标题样式 */
+        .title {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 22px;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .title:hover {
+            background: #f1f3f5;
+        }
+        .title-input {
+            width: 100%;
+            max-width: 500px;
+            padding: 10px 15px;
+            border: 2px solid #007bff;
+            border-radius: 8px;
+            font-size: 22px;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+            outline: none;
+            background: #fff;
+        }
+        /* 主功能按钮组 */
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 25px;
+            justify-content: center;
+        }
+        .main-btn {
+            padding: 12px 18px;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            flex: 1;
+            min-width: 100px;
+            outline: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .main-btn:nth-child(1) {background: #007bff;}
+        .main-btn:nth-child(2) {background: #28a745;}
+        .main-btn:nth-child(3) {background: #ffc107;}
+        .main-btn:nth-child(4) {background: #dc3545;}
+        .main-btn:hover {opacity: 0.9;}
+        .main-btn:active {transform: scale(0.98);}
+        /* 录入表单 */
+        .form-box {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+            display: none;
+        }
+        .form-box.show {display: block;}
+        .form-item {
+            margin-bottom: 20px;
+        }
+        .form-item label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 16px;
+        }
+        .form-item input, .form-item select {
+            width: 100%;
+            padding: 13px 15px;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 16px;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+            background: #fff;
+        }
+        .form-item input:focus, .form-item select:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+        }
+        /* 照片上传区域 */
+        .photo-upload-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        #fileInput {
+            display: none;
+            width: 0;
+            height: 0;
+        }
+        .upload-btn {
+            padding: 11px 20px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            outline: none;
+            font-size: 15px;
+            white-space: nowrap;
+        }
+        .upload-btn:hover {background: #5c636a;}
+        #previewImg {
+            width: 110px;
+            height: 110px;
+            border-radius: 10px;
+            object-fit: cover;
+            border: 2px dashed #e5e7eb;
+            display: none;
+            flex-shrink: 0;
+        }
+        .submit-btn {
+            width: 100%;
+            padding: 13px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            outline: none;
+            box-shadow: 0 2px 5px rgba(40,167,69,0.2);
+        }
+        .submit-btn:hover {background: #218838;}
+        /* 成员列表 */
+        .member-list, .rank-list {
+            display: none;
+            gap: 15px;
+            flex-direction: column;
+            margin-bottom: 30px;
+        }
+        .member-list.show, .rank-list.show {display: flex;}
+        .member-item {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            flex-wrap: wrap;
+            cursor: pointer;
+        }
+        .member-item:hover {box-shadow: 0 3px 10px rgba(0,0,0,0.1);}
+        .member-avatar {
+            width: 90px;
+            height: 90px;
+            border-radius: 10px;
+            object-fit: cover;
+            border: 2px solid #f1f3f5;
+            flex-shrink: 0;
+        }
+        .member-info {
+            flex: 1;
+            min-width: 200px;
+        }
+        .info-item {
+            margin-bottom: 7px;
+            font-size: 16px;
+            color: #333;
+            line-height: 1.4;
+        }
+        .info-item label {
+            font-weight: 500;
+            color: #495057;
+            margin-right: 8px;
+        }
+        .info-item span {
+            color: #6c757d;
+        }
+        /* 星星按钮 - 美化 */
+        .score-btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+        .score-btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            color: white;
+            outline: none;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .add-star {background: #ffc107;}
+        .sub-star {background: #6c757d;}
+        .score-btn:hover {opacity: 0.9;}
+        .score-btn:active {transform: scale(0.95);}
+        /* 弹窗样式 - 整体优化 */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+        }
+        .modal.show {display: flex;}
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.2);
+        }
+        .modal-title {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #333;
+            font-size: 19px;
+            font-weight: bold;
+        }
+        /* 弹窗内头像 */
+        #modalAvatar {
+            width: 130px;
+            height: 130px;
+            border-radius: 10px;
+            object-fit: cover;
+            margin: 0 auto 20px;
+            display: block;
+            border: 2px solid #f1f3f5;
+            cursor: pointer;
+        }
+        #modalAvatar:hover {border-color: #007bff;}
+        #modalFileInput {display: none;}
+        /* 弹窗内成员信息 */
+        .modal-member-info {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .modal-info-item {
+            margin-bottom: 10px;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        .modal-info-item label {
+            font-weight: 500;
+            color: #495057;
+            min-width: 60px;
+            display: inline-block;
+        }
+        .modal-info-item span {
+            color: #333;
+        }
+        /* 备注框 - 放大+自动换行 */
+        .modal-form-item textarea {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            min-height: 120px;
+            resize: vertical;
+            font-size: 16px;
+            outline: none;
+            margin-bottom: 20px;
+            line-height: 1.5;
+            word-wrap: break-word;
+            word-break: break-all;
+        }
+        .modal-form-item textarea:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+        }
+        /* 爱心按钮 - 美化+大尺寸 */
+        .heart-btn-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-bottom: 25px;
+        }
+        .heart-btn {
+            padding: 10px 25px;
+            background: #e83e8c;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            outline: none;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 3px 8px rgba(232,62,140,0.2);
+        }
+        .heart-btn:hover {background: #d63384;}
+        .heart-btn:active {transform: scale(0.95);}
+        /* 弹窗按钮组 - 新增删除按钮 */
+        .modal-btn-group {
+            display: flex;
+            gap: 12px;
+        }
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            color: white;
+            font-size: 16px;
+            outline: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .save-btn {background: #28a745;}
+        .del-btn {background: #dc3545;}
+        .close-btn {background: #6c757d;}
+        .modal-btn:hover {opacity: 0.9;}
+        .modal-btn:active {transform: scale(0.98);}
+        /* 排行榜 */
+        .rank-list .rank-filter {
+            background: white;
+            padding: 18px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+        .rank-filter label {color: #495057; font-size: 16px;}
+        .rank-filter select {
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            outline: none;
+            font-size: 16px;
+            min-width: 130px;
+        }
+        .rank-filter select:focus {border-color: #007bff;}
+        .rank-item {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+        .rank-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 10px;
+            object-fit: cover;
+            border: 2px solid #f1f3f5;
+            flex-shrink: 0;
+        }
+        /* 隐藏设置弹窗 */
+        .setting-item {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .setting-item input {
+            width: 18px;
+            height: 18px;
+            outline: none;
+            cursor: pointer;
+            accent-color: #007bff;
+        }
+        /* 空状态提示 */
+        .empty-tip {
+            text-align:center; 
+            padding: 40px 20px; 
+            background:#fff; 
+            border-radius:12px; 
+            color:#6c757d;
+            font-size: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 可双击编辑的标题 -->
+        <h1 class="title" id="editTitle">成员照片积分管理系统</h1>
+        
+        <!-- 核心功能按钮 -->
+        <div class="btn-group">
+            <button class="main-btn" id="addMemberBtn">录入成员</button>
+            <button class="main-btn" id="memberListBtn">成员列表</button>
+            <button class="main-btn" id="rankBtn">排行榜</button>
+            <button class="main-btn" id="hideSettingBtn">隐藏设置</button>
+        </div>
 
-            <div class="row">
-                <a
-                    href="https://tauri.app"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    <img
-                        src="./assets/tauri.svg"
-                        class="logo tauri"
-                        alt="Tauri logo"
-                    />
-                </a>
-                <a
-                    href="https://pakeplus.com/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    <img
-                        src="https://hk.gh-proxy.org/https://github.com/Sjj1024/PakePlus/blob/main/app-icon.png"
-                        class="logo vanilla"
-                        alt="JavaScript logo"
-                    />
-                </a>
+        <!-- 录入成员表单 -->
+        <div class="form-box" id="addForm">
+            <div class="form-item">
+                <label>成员照片</label>
+                <div class="photo-upload-area">
+                    <input type="file" id="fileInput" accept="image/*" capture="camera" multiple="false">
+                    <button class="upload-btn" id="takePhotoBtn">📷 拍照上传</button>
+                    <button class="upload-btn" id="choosePhotoBtn">🖼️ 相册选择</button>
+                    <img src="" alt="照片预览" id="previewImg">
+                </div>
             </div>
-            <p>Click to get data</p>
-            <form class="row" id="greet-form">
-                <input id="greet-input" placeholder="Enter a name..." />
-                <button type="submit" id="getdata">GET DATA</button>
-            </form>
-            <div class="functions">
-                <a href="./book.html" target="_self">跳转到book.html</a>
-                <a
-                    href="https://www.baidu.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    >跳到百度blank
-                </a>
-                <a
-                    href="https://www.baidu.com"
-                    target="_self"
-                    rel="noopener noreferrer"
-                >
-                    跳到百度self
-                </a>
-                <button onclick="sayHello()">点击我</button>
-                <button onclick="sayHello()">下载文件</button>
-                <button onclick="sayHello()">上传文件</button>
-                <button onclick="sayHello()">访问相机</button>
-                <button onclick="sayHello()">访问麦克风</button>
-                <button onclick="sayHello()">访问相册</button>
-                <button class="btn" onclick="openWechat()">打开微信</button>
-                <button class="btn" onclick="openWechatScan()">
-                    打开扫一扫
-                </button>
-                <button class="btn" onclick="openZhihu()">打开知乎</button>
-                <button onclick="sayHello()">打开抖音</button>
-                <button onclick="sayHello()">用浏览器打开</button>
-                <button>打开知乎</button>
+            <div class="form-item">
+                <label>姓名</label>
+                <input type="text" id="userName" placeholder="请输入成员姓名" autocomplete="off">
             </div>
-            <p id="greet-msg"></p>
-            <img src="./static/image/cursor.jpeg" alt="logo" />
-            <video
-                src="https://hk.gh-proxy.org/https://github.com/Sjj1024/PakePlus/blob/main/docs/static/videos/pakeplus.mp4"
-                autoplay
-                controls
-                style="width: 100%; height: 100%"
-            ></video>
-            <audio src="./static/music/yin.mp3" controls></audio>
-        </main>
-    </body>
+            <div class="form-item">
+                <label>性别</label>
+                <select id="userGender">
+                    <option value="男">男</option>
+                    <option value="女">女</option>
+                </select>
+            </div>
+            <div class="form-item">
+                <label>班级</label>
+                <input type="text" id="userClass" placeholder="请输入班级，如：大一班/三年级2班" autocomplete="off">
+            </div>
+            <button class="submit-btn" id="saveMemberBtn">✅ 保存成员信息</button>
+        </div>
+
+        <!-- 成员列表 -->
+        <div class="member-list" id="memberListBox"></div>
+
+        <!-- 排行榜 -->
+        <div class="rank-list" id="rankBox">
+            <div class="rank-filter">
+                <label>排序依据：</label>
+                <select id="sortType">
+                    <option value="star">⭐ 星星数量</option>
+                    <option value="heart">❤️ 爱心数量</option>
+                </select>
+                <label>排序方式：</label>
+                <select id="sortOrder">
+                    <option value="desc">从多到少</option>
+                    <option value="asc">从少到多</option>
+                </select>
+            </div>
+            <div id="rankListContent"></div>
+        </div>
+
+        <!-- 成员详情弹窗（核心优化：显示全信息+大备注+换照片+删除） -->
+        <div class="modal" id="memberModal">
+            <div class="modal-content">
+                <h3 class="modal-title">成员详情编辑</h3>
+                <img src="" alt="点击更换照片" id="modalAvatar">
+                <input type="file" id="modalFileInput" accept="image/*" capture="camera" multiple="false">
+                
+                <!-- 弹窗内显示完整成员信息 -->
+                <div class="modal-member-info">
+                    <div class="modal-info-item"><label>姓名：</label><span id="modalName"></span></div>
+                    <div class="modal-info-item"><label>性别：</label><span id="modalGender"></span></div>
+                    <div class="modal-info-item"><label>班级：</label><span id="modalClass"></span></div>
+                    <div class="modal-info-item"><label>星星：</label><span id="modalStar">0</span> ⭐</div>
+                    <div class="modal-info-item"><label>爱心：</label><span id="modalHeart">0</span> ❤️</div>
+                </div>
+
+                <!-- 放大版备注框 -->
+                <div class="modal-form-item">
+                    <textarea id="memberRemark" placeholder="请输入成员备注信息，支持自动换行..."></textarea>
+                </div>
+
+                <!-- 美化版爱心按钮 -->
+                <div class="heart-btn-group">
+                    <button class="heart-btn" id="addHeartBtn">❤️ 爱心+1</button>
+                    <button class="heart-btn" id="subHeartBtn">❤️ 爱心-1</button>
+                </div>
+
+                <!-- 弹窗按钮组：保存+删除+关闭 -->
+                <div class="modal-btn-group">
+                    <button class="modal-btn save-btn" id="saveModalBtn">✅ 保存修改</button>
+                    <button class="modal-btn del-btn" id="deleteMemberBtn">🗑️ 删除成员</button>
+                    <button class="modal-btn close-btn" id="closeModalBtn">❌ 关闭</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 隐藏设置弹窗 -->
+        <div class="modal" id="hideSettingModal">
+            <div class="modal-content">
+                <h3 class="modal-title">信息显示设置</h3>
+                <div class="setting-item">
+                    <input type="checkbox" id="hideName" checked>
+                    <label>显示姓名</label>
+                </div>
+                <div class="setting-item">
+                    <input type="checkbox" id="hideGender" checked>
+                    <label>显示性别</label>
+                </div>
+                <div class="setting-item">
+                    <input type="checkbox" id="hideClass" checked>
+                    <label>显示班级</label>
+                </div>
+                <div class="setting-item">
+                    <input type="checkbox" id="hideStar" checked>
+                    <label>显示⭐ 星星</label>
+                </div>
+                <div class="setting-item">
+                    <input type="checkbox" id="hideHeart" checked>
+                    <label>显示❤️ 爱心</label>
+                </div>
+                <div class="modal-btn-group" style="margin-top: 10px;">
+                    <button class="modal-btn save-btn" id="saveSettingBtn">✅ 保存设置</button>
+                    <button class="modal-btn close-btn" id="closeSettingBtn">❌ 关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 兼容移动端/PC端
+        const isMobile = /Android|iPhone|iPad|iPod|Windows Phone/i.test(navigator.userAgent);
+        const clickEvent = 'click';
+        // 禁止默认行为避免冲突
+        document.addEventListener('dblclick', e => e.preventDefault(), {passive: false});
+
+        // 全局核心变量 - 本地存储键名固定，确保永久保存
+        const STORAGE_KEY_MEMBER = 'MEMBER_LIST_2025';
+        const STORAGE_KEY_SETTING = 'HIDE_SETTING_2025';
+        const STORAGE_KEY_TITLE = 'SYSTEM_TITLE_2025'; // 新增标题存储键
+        const FILE_INPUT = document.getElementById('fileInput');
+        const PREVIEW_IMG = document.getElementById('previewImg');
+        const MODAL_FILE_INPUT = document.getElementById('modalFileInput');
+        const editTitle = document.getElementById('editTitle');
+        let currentMemberId = null; // 当前操作成员ID
+        // 本地存储数据（永久保存，修复读取逻辑）
+        let memberList = JSON.parse(localStorage.getItem(STORAGE_KEY_MEMBER) || '[]');
+        let hideSetting = JSON.parse(localStorage.getItem(STORAGE_KEY_SETTING) || '{"hideName":true,"hideGender":true,"hideClass":true,"hideStar":true,"hideHeart":true}');
+        let systemTitle = localStorage.getItem(STORAGE_KEY_TITLE) || '成员照片积分管理系统'; // 读取自定义标题
+
+        // 页面初始化 - 优先读取本地存储，确保重启后数据存在
+        window.onload = function() {
+            // 强制初始化本地存储（防止键名丢失）
+            if (!localStorage.getItem(STORAGE_KEY_MEMBER)) localStorage.setItem(STORAGE_KEY_MEMBER, '[]');
+            if (!localStorage.getItem(STORAGE_KEY_SETTING)) localStorage.setItem(STORAGE_KEY_SETTING, '{"hideName":true,"hideGender":true,"hideClass":true,"hideStar":true,"hideHeart":true}');
+            if (!localStorage.getItem(STORAGE_KEY_TITLE)) localStorage.setItem(STORAGE_KEY_TITLE, systemTitle);
+            // 初始化标题
+            editTitle.innerText = systemTitle;
+            // 初始化隐藏设置勾选状态
+            document.getElementById('hideName').checked = hideSetting.hideName;
+            document.getElementById('hideGender').checked = hideSetting.hideGender;
+            document.getElementById('hideClass').checked = hideSetting.hideClass;
+            document.getElementById('hideStar').checked = hideSetting.hideStar;
+            document.getElementById('hideHeart').checked = hideSetting.hideHeart;
+            // 排行榜排序事件
+            document.getElementById('sortType').onchange = renderRankList;
+            document.getElementById('sortOrder').onchange = renderRankList;
+            // 绑定所有事件
+            bindAllEvents();
+            // 绑定标题双击编辑事件
+            bindTitleEditEvent();
+        };
+
+        // 绑定所有按钮事件
+        function bindAllEvents() {
+            /********************* 主功能按钮 *********************/
+            document.getElementById('addMemberBtn').addEventListener(clickEvent, () => {
+                hideAllModule();
+                document.getElementById('addForm').classList.add('show');
+                resetForm();
+            });
+            document.getElementById('memberListBtn').addEventListener(clickEvent, () => {
+                hideAllModule();
+                document.getElementById('memberListBox').classList.add('show');
+                renderMemberList();
+            });
+            document.getElementById('rankBtn').addEventListener(clickEvent, () => {
+                hideAllModule();
+                document.getElementById('rankBox').classList.add('show');
+                renderRankList();
+            });
+            document.getElementById('hideSettingBtn').addEventListener(clickEvent, () => {
+                document.getElementById('hideSettingModal').classList.add('show');
+            });
+
+            /********************* 照片上传 *********************/
+            // 拍照上传
+            document.getElementById('takePhotoBtn').addEventListener(clickEvent, () => {
+                FILE_INPUT.value = '';
+                FILE_INPUT.setAttribute('capture', 'camera');
+                FILE_INPUT.click();
+            });
+            // 相册选择
+            document.getElementById('choosePhotoBtn').addEventListener(clickEvent, () => {
+                FILE_INPUT.value = '';
+                FILE_INPUT.removeAttribute('capture');
+                FILE_INPUT.click();
+            });
+            // 录入页照片预览
+            FILE_INPUT.addEventListener('change', photoPreview);
+            // 弹窗内照片更换
+            MODAL_FILE_INPUT.addEventListener('change', modalPhotoChange);
+            // 弹窗头像点击换照片
+            document.getElementById('modalAvatar').addEventListener(clickEvent, () => {
+                MODAL_FILE_INPUT.value = '';
+                MODAL_FILE_INPUT.click();
+            });
+
+            /********************* 录入表单 - 新增二次确认 *********************/
+            document.getElementById('saveMemberBtn').addEventListener(clickEvent, () => {
+                // 先做表单基础校验
+                const name = document.getElementById('userName').value.trim();
+                const className = document.getElementById('userClass').value.trim();
+                const photo = PREVIEW_IMG.src;
+                if (!name) {alert('请输入成员姓名！'); return;}
+                if (!className) {alert('请输入班级信息！'); return;}
+                if (!photo || photo === '') {alert('请先上传成员照片！'); return;}
+                // 二次确认是否保存
+                const isConfirm = confirm('📝 确认保存该成员信息吗？\n保存后将永久存储到本地，可在成员列表查看！');
+                if (isConfirm) {
+                    saveMemberInfo(); // 确认后执行保存
+                }
+            });
+
+            /********************* 成员详情弹窗 *********************/
+            document.getElementById('closeModalBtn').addEventListener(clickEvent, () => {
+                document.getElementById('memberModal').classList.remove('show');
+                currentMemberId = null;
+            });
+            document.getElementById('saveModalBtn').addEventListener(clickEvent, saveModalInfo);
+            document.getElementById('addHeartBtn').addEventListener(clickEvent, () => changeHeart(1));
+            document.getElementById('subHeartBtn').addEventListener(clickEvent, () => changeHeart(-1));
+            // 删除成员功能 - 双重确认
+            document.getElementById('deleteMemberBtn').addEventListener(clickEvent, deleteMember);
+
+            /********************* 隐藏设置弹窗 *********************/
+            document.getElementById('saveSettingBtn').addEventListener(clickEvent, saveHideSetting);
+            document.getElementById('closeSettingBtn').addEventListener(clickEvent, () => {
+                document.getElementById('hideSettingModal').classList.remove('show');
+            });
+        }
+
+        /********************* 新增：标题双击编辑事件 *********************/
+        function bindTitleEditEvent() {
+            // 双击标题变为输入框
+            editTitle.addEventListener('dblclick', () => {
+                const currentText = editTitle.innerText;
+                // 创建输入框
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'title-input';
+                input.value = currentText;
+                // 替换标题为输入框
+                editTitle.parentNode.replaceChild(input, editTitle);
+                // 输入框自动获取焦点
+                input.focus();
+                // 点击空白处保存修改
+                document.addEventListener('click', (e) => {
+                    if (e.target !== input) {
+                        saveTitle(input.value);
+                    }
+                });
+                // 按回车键保存修改
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        saveTitle(input.value);
+                    }
+                });
+            });
+        }
+        // 保存自定义标题（同步本地存储）
+        function saveTitle(newTitle) {
+            if (!newTitle || newTitle.trim() === '') {
+                newTitle = '成员照片积分管理系统'; // 空值默认标题
+            }
+            systemTitle = newTitle.trim();
+            // 替换输入框为标题
+            editTitle.innerText = systemTitle;
+            const input = document.querySelector('.title-input');
+            if (input) {
+                input.parentNode.replaceChild(editTitle, input);
+            }
+            // 保存到本地存储，永久生效
+            localStorage.setItem(STORAGE_KEY_TITLE, systemTitle);
+            // 重新绑定双击事件
+            bindTitleEditEvent();
+        }
+
+        /********************* 核心通用方法 - 修复本地存储 *********************/
+        // 隐藏所有模块
+        function hideAllModule() {
+            document.getElementById('addForm').classList.remove('show');
+            document.getElementById('memberListBox').classList.remove('show');
+            document.getElementById('rankBox').classList.remove('show');
+        }
+        // 本地存储保存 - 固定键名，强制序列化，确保永久保存
+        function saveToLocal() {
+            localStorage.setItem(STORAGE_KEY_MEMBER, JSON.stringify(memberList));
+            localStorage.setItem(STORAGE_KEY_SETTING, JSON.stringify(hideSetting));
+            // 强制刷新本地存储（解决部分浏览器缓存问题）
+            localStorage.getItem(STORAGE_KEY_MEMBER);
+            localStorage.getItem(STORAGE_KEY_SETTING);
+        }
+
+        /********************* 照片上传相关 *********************/
+        // 录入页照片预览
+        function photoPreview(e) {
+            const file = e.target.files[0];
+            if (!file || !file.type.startsWith('image/')) {
+                alert('请选择有效的图片文件！');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                PREVIEW_IMG.src = e.target.result;
+                PREVIEW_IMG.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+        // 弹窗内更换照片
+        function modalPhotoChange(e) {
+            const file = e.target.files[0];
+            if (!file || !file.type.startsWith('image/') || !currentMemberId) {
+                alert('请选择有效的图片文件！');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const member = memberList.find(item => item.id === currentMemberId);
+                if (member) {
+                    member.photo = e.target.result;
+                    document.getElementById('modalAvatar').src = e.target.result;
+                    saveToLocal(); // 立即保存
+                    renderMemberList();
+                    renderRankList();
+                    alert('照片更换成功！');
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        /********************* 录入成员相关 *********************/
+        // 保存成员信息 - 修复保存后立即同步本地存储
+        function saveMemberInfo() {
+            const name = document.getElementById('userName').value.trim();
+            const gender = document.getElementById('userGender').value;
+            const className = document.getElementById('userClass').value.trim();
+            const photo = PREVIEW_IMG.src;
+
+            // 构造成员数据
+            const newMember = {
+                id: Date.now(), // 时间戳作为唯一ID
+                name: name,
+                gender: gender,
+                className: className,
+                photo: photo,
+                star: 0,
+                heart: 0,
+                remark: ''
+            };
+
+            // 加入列表并立即保存（核心修复）
+            memberList.push(newMember);
+            saveToLocal(); // 强制保存到本地
+            alert('✅ 成员信息保存成功！（已永久存储）');
+            resetForm();
+            hideAllModule();
+        }
+        // 重置录入表单
+        function resetForm() {
+            document.getElementById('userName').value = '';
+            document.getElementById('userGender').selectedIndex = 0;
+            document.getElementById('userClass').value = '';
+            FILE_INPUT.value = '';
+            PREVIEW_IMG.src = '';
+            PREVIEW_IMG.style.display = 'none';
+        }
+
+        /********************* 成员列表相关 *********************/
+        // 渲染成员列表 - 每次渲染前重新读取本地存储
+        function renderMemberList() {
+            // 重新读取本地存储，确保数据最新
+            memberList = JSON.parse(localStorage.getItem(STORAGE_KEY_MEMBER) || '[]');
+            const listBox = document.getElementById('memberListBox');
+            listBox.innerHTML = '';
+
+            // 无成员提示
+            if (memberList.length === 0) {
+                listBox.innerHTML = `<div class="empty-tip">暂无成员信息<br>点击【录入成员】添加吧！</div>`;
+                return;
+            }
+
+            // 遍历渲染每个成员
+            memberList.forEach(member => {
+                // 根据设置判断是否显示信息
+                let nameHtml = hideSetting.hideName ? `<div class="info-item"><label>姓名</label><span>${member.name}</span></div>` : '';
+                let genderHtml = hideSetting.hideGender ? `<div class="info-item"><label>性别</label><span>${member.gender}</span></div>` : '';
+                let classHtml = hideSetting.hideClass ? `<div class="info-item"><label>班级</label><span>${member.className}</span></div>` : '';
+                let starHtml = hideSetting.hideStar ? `<div class="info-item"><label>星星</label><span>${member.star}</span> ⭐</div>` : '';
+                let heartHtml = hideSetting.hideHeart ? `<div class="info-item"><label>爱心</label><span>${member.heart}</span> ❤️</div>` : '';
+                // 星星按钮（仅显示星星时展示）
+                let starBtnHtml = hideSetting.hideStar ? `
+                    <div class="score-btn-group">
+                        <button class="score-btn add-star" data-id="${member.id}">+ ⭐ 星星</button>
+                        <button class="score-btn sub-star" data-id="${member.id}">- ⭐ 星星</button>
+                    </div>
+                ` : '';
+
+                // 创建成员项
+                const item = document.createElement('div');
+                item.className = 'member-item';
+                item.dataset.id = member.id;
+                item.innerHTML = `
+                    <img src="${member.photo}" alt="${member.name}" class="member-avatar" data-id="${member.id}">
+                    <div class="member-info" data-id="${member.id}">
+                        ${nameHtml}
+                        ${genderHtml}
+                        ${classHtml}
+                        ${starHtml}
+                        ${heartHtml}
+                        ${starBtnHtml}
+                    </div>
+                `;
+                listBox.appendChild(item);
+
+                // 点击成员项（照片/姓名都可）打开弹窗
+                item.addEventListener(clickEvent, () => openMemberModal(member.id));
+            });
+
+            // 绑定星星按钮单独事件（阻止冒泡）
+            bindStarBtnEvent();
+        }
+        // 绑定星星增减按钮事件
+        function bindStarBtnEvent() {
+            document.querySelectorAll('.score-btn').forEach(btn => {
+                btn.addEventListener(clickEvent, (e) => {
+                    e.stopPropagation(); // 阻止触发弹窗
+                    const id = Number(btn.dataset.id);
+                    const type = btn.classList.contains('add-star') ? 1 : -1;
+                    changeStar(id, type);
+                });
+            });
+        }
+        // 星星增减 - 操作后立即保存
+        function changeStar(id, type) {
+            const member = memberList.find(item => item.id === id);
+            if (!member) return;
+            if (type === 1) {
+                member.star++;
+                alert(`星星+1，当前：${member.star}颗`);
+            } else {
+                if (member.star <= 0) {
+                    alert('星星数量不能小于0！');
+                    return;
+                }
+                member.star--;
+                alert(`星星-1，当前：${member.star}颗`);
+            }
+            saveToLocal(); // 立即保存
+            renderMemberList();
+            renderRankList();
+        }
+
+        /********************* 成员详情弹窗 *********************/
+        // 打开成员详情弹窗
+        function openMemberModal(id) {
+            currentMemberId = id;
+            const member = memberList.find(item => item.id === id);
+            if (!member) return;
+
+            // 填充弹窗数据
+            document.getElementById('modalAvatar').src = member.photo;
+            document.getElementById('modalName').innerText = member.name;
+            document.getElementById('modalGender').innerText = member.gender;
+            document.getElementById('modalClass').innerText = member.className;
+            document.getElementById('modalStar').innerText = member.star;
+            document.getElementById('modalHeart').innerText = member.heart;
+            document.getElementById('memberRemark').value = member.remark || '';
+
+            // 显示弹窗
+            document.getElementById('memberModal').classList.add('show');
+        }
+        // 爱心增减 - 操作后立即保存
+        function changeHeart(type) {
+            if (!currentMemberId) return;
+            const member = memberList.find(item => item.id === currentMemberId);
+            if (!member) return;
+
+            if (type === 1) {
+                member.heart++;
+                document.getElementById('modalHeart').innerText = member.heart;
+                alert(`爱心+1，当前：${member.heart}颗`);
+            } else {
+                if (member.heart <= 0) {
+                    alert('爱心数量不能小于0！');
+                    return;
+                }
+                member.heart--;
+                document.getElementById('modalHeart').innerText = member.heart;
+                alert(`爱心-1，当前：${member.heart}颗`);
+            }
+            saveToLocal(); // 立即保存
+            renderMemberList();
+            renderRankList();
+        }
+        // 保存弹窗修改 - 立即同步本地存储
+        function saveModalInfo() {
+            if (!currentMemberId) return;
+            const member = memberList.find(item => item.id === currentMemberId);
+            if (!member) return;
+
+            // 保存备注
+            member.remark = document.getElementById('memberRemark').value.trim();
+            saveToLocal(); // 立即保存
+            renderMemberList();
+            document.getElementById('memberModal').classList.remove('show');
+            currentMemberId = null;
+            alert('✅ 成员信息修改保存成功！（已永久存储）');
+        }
+        // 删除成员 - 双重确认+彻底删除+立即保存
+        function deleteMember() {
+            if (!currentMemberId) return;
+            // 一级警告确认
+            const firstConfirm = confirm('⚠️ 警告！\n即将删除该成员所有信息！\n删除后数据将永久无法恢复！\n\n是否继续？');
+            if (!firstConfirm) return;
+            // 二级精准确认
+            const secondConfirm = confirm('✅ 再次确认！\n确定要删除【' + document.getElementById('modalName').innerText + '】的所有信息吗？\n点击"确定"将彻底删除！');
+            if (!secondConfirm) return;
+
+            // 彻底过滤删除成员数据
+            memberList = memberList.filter(item => item.id !== currentMemberId);
+            saveToLocal(); // 立即保存，清除本地数据
+            renderMemberList();
+            renderRankList();
+            document.getElementById('memberModal').classList.remove('show');
+            currentMemberId = null;
+            alert('✅ 成员已彻底删除！\n所有相关数据已清除！');
+        }
+
+        /********************* 排行榜相关 *********************/
+        // 渲染排行榜 - 渲染前重新读取本地存储
+        function renderRankList() {
+            // 重新读取本地存储，确保数据最新
+            memberList = JSON.parse(localStorage.getItem(STORAGE_KEY_MEMBER) || '[]');
+            const rankContent = document.getElementById('rankListContent');
+            rankContent.innerHTML = '';
+            const sortType = document.getElementById('sortType').value; // star/heart
+            const sortOrder = document.getElementById('sortOrder').value; // desc/asc
+
+            // 无成员提示
+            if (memberList.length === 0) {
+                rankContent.innerHTML = `<div class="empty-tip">暂无成员信息<br>无法生成排行榜！</div>`;
+                return;
+            }
+
+            // 深拷贝并排序
+            let sortedList = JSON.parse(JSON.stringify(memberList));
+            sortedList.sort((a, b) => {
+                return sortOrder === 'desc' ? b[sortType] - a[sortType] : a[sortType] - b[sortType];
+            });
+
+            // 遍历渲染
+            sortedList.forEach((member, index) => {
+                let nameHtml = hideSetting.hideName ? member.name : '——';
+                let starHtml = hideSetting.hideStar ? `⭐ ${member.star}` : '';
+                let heartHtml = hideSetting.hideHeart ? `❤️ ${member.heart}` : '';
+                let scoreHtml = (starHtml && heartHtml) ? `${starHtml} | ${heartHtml}` : starHtml || heartHtml;
+
+                const item = document.createElement('div');
+                item.className = 'rank-item';
+                item.innerHTML = `
+                    <div style="font-size: 20px; font-weight: bold; color: #${index<3 ? 'ffc107' : index<6 ? '6c757d' : '333'}; width: 35px;">${index+1}</div>
+                    <img src="${member.photo}" alt="${member.name}" class="rank-avatar">
+                    <div class="member-info">
+                        <div style="font-size: 17px; font-weight: 500; color: #333; margin-bottom: 8px;">${nameHtml}</div>
+                        <div style="font-size: 16px; color: #6c757d;">${scoreHtml}</div>
+                    </div>
+                `;
+                rankContent.appendChild(item);
+            });
+        }
+
+        /********************* 隐藏设置相关 *********************/
+        // 保存隐藏设置 - 立即同步本地存储
+        function saveHideSetting() {
+            hideSetting = {
+                hideName: document.getElementById('hideName').checked,
+                hideGender: document.getElementById('hideGender').checked,
+                hideClass: document.getElementById('hideClass').checked,
+                hideStar: document.getElementById('hideStar').checked,
+                hideHeart: document.getElementById('hideHeart').checked
+            };
+            saveToLocal(); // 立即保存
+            renderMemberList();
+            renderRankList();
+            document.getElementById('hideSettingModal').classList.remove('show');
+            alert('✅ 显示设置保存成功！（已永久存储）');
+        }
+    </script>
+</body>
 </html>
